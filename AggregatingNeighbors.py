@@ -3,6 +3,7 @@ from random import shuffle
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import copy
 
 
 def initializeMatrix(nWidth, occupRate, groupRatios):
@@ -109,8 +110,6 @@ def move(initMap, unHappyList, vacancyList, moveSize):
 	return initMap
 
 
-
-
 # Weights of impact from neighbors, this person is in the center of te matrix.
 # Rows and columns must be odd numbers.
 
@@ -143,7 +142,7 @@ occupRate = 0.9
 groupRatios = [.5,.5]
 threshold = 0.5
 moveSize = 100
-maxSteps = 200
+maxSteps = 20
 
 initMap = initializeMatrix(nWidth, occupRate, groupRatios)
 print(initMap)
@@ -165,12 +164,15 @@ threshold = np.percentile(happList, 20)
 #############################################################################################
 # Plot
 #############################################################################################
-fig, ax = plt.subplots()
+fig = plt.figure(figsize=(10,5))
+ax1 = fig.add_subplot(1,2,1)
+ax2 = fig.add_subplot(1,2,2)
+
 ims = []
 cmap = matplotlib.colors.ListedColormap(['white', 'cyan', 'blue', 'green'])
-# cmap = matplotlib.colors.Colormap('jet')
 
 for s in range(maxSteps):
+
 	happMat, vacancyList, unHappyList = calcHappiness(initMap, weightMat, likeMat, threshold)
 	avgHappiness = happMat.mean() / occupRate
 	if len(unHappyList) == 0:
@@ -178,14 +180,37 @@ for s in range(maxSteps):
 		break
 	initMap = move(initMap, unHappyList, vacancyList, moveSize)
 	print("step: {}".format(s))
-	print(initMap)
-	title = ax.text(0.5,1.05,"Step: {}, Avg Happiness: {}".format(s, round(avgHappiness,3)), 
-                    size=plt.rcParams["axes.titlesize"],
-                    ha="center", transform=ax.transAxes, )
-	ims.append([ax.imshow(initMap, interpolation='nearest', origin='lower',
-                cmap=cmap, animated=True), title])
-
+	# print(initMap)
+	title1 = ax1.text(0.5,1.05,"Step: {}, Avg Happiness: {}".format(s, round(avgHappiness,3)), 
+					size=plt.rcParams["axes.titlesize"],
+					ha="center", transform=ax1.transAxes, )
+	im1 = ax1.imshow(initMap, interpolation='nearest', origin='lower', cmap=cmap, animated=True)
+	im2 = ax2.hist(np.linspace(0, 100, num=100))
+	ims.append([im1, im2])
 
 ani = animation.ArtistAnimation(fig, ims, interval=100, blit=False, repeat=True)
-# ani.save('aggregation1.mp4')
+# ani.save('aggregation_w{}_occRate{}_th{}.mp4'.format(nWidth, occupRate, round(threshold,2)))
+plt.show()
+
+
+
+fig = plt.figure(figsize=(6,8))
+axMap = fig.add_subplot(2,1,1)
+axHis = fig.add_subplot(2,2,3)
+axCur = fig.add_subplot(2,2,4)
+
+ims = []
+cmap = matplotlib.colors.ListedColormap(['white', 'cyan', 'blue', 'green'])
+
+def updateData(curr):
+	if curr <= : return
+	for ax in (ax1, ax2, ax3, ax4):
+		ax.clear()
+	ax1.hist(x1[:curr], normed=True, bins=np.linspace(-6,1, num=21), alpha=0.5)
+	ax2.hist(x2[:curr], normed=True, bins=np.linspace(0,15,num=21), alpha=0.5)
+	ax3.hist(x3[:curr], normed=True, bins=np.linspace(7,20,num=21), alpha=0.5)
+	ax4.hist(x4[:curr], normed=True, bins=np.linspace(14,20,num=21), alpha=0.5)
+
+ani = animation.FuncAnimation(fig, updateData, interval=100, repeat=False)
+
 plt.show()
