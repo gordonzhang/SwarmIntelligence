@@ -7,7 +7,7 @@ from matplotlib import colors
 
 
 ## Functions
-def initializeMatrix(nWidth:int, occupancyRate:float, gRatios:list):
+def InitializeMatrix(nWidth:int, occupancyRate:float, gRatios:list):
 	assert (0 <= occupancyRate <= 1), ...
 	"Occupancy Rate must be between 0 and 1."
 	assert (sum(gRatios) == 1), "Sum of weights must be 1."
@@ -40,7 +40,7 @@ def initializeMatrix(nWidth:int, occupancyRate:float, gRatios:list):
 	return np.reshape(nodes, (nWidth, nWidth))
 
 
-def calcHappiness(aggMap:np.array, weightMat:np.array, likeMat:np.array, threshold:float):
+def CalcHappiness(aggMap:np.array, weightMat:np.array, likeMat:np.array, threshold:float):
 	assert (np.size(weightMat,0)%2 == 1 and np.size(weightMat,1)%2 == 1), ...
 	"Number of rows and columns of weight matrix should be both odd numbers."
 
@@ -145,11 +145,11 @@ if "__main__" == __name__:
 	moveSize = 100
 	maxSteps = 30
 
-	aggregationMap = initializeMatrix(width, occupancyR, groupRatios)
+	aggregationMap = InitializeMatrix(width, occupancyR, groupRatios)
 	print(aggregationMap)
 
 	# get the percentiles and set the threshold accordingly
-	happinessMatrix, vacancyL, unHappyL = calcHappiness(aggregationMap, weightMatrix, likeMatrix, hThreshold)
+	happinessMatrix, vacancyL, unHappyL = CalcHappiness(aggregationMap, weightMatrix, likeMatrix, hThreshold)
 	happinessList = happinessMatrix.reshape(-1)
 	index = np.argwhere(happinessList==0)
 	happinessList = np.delete(happinessList, index)
@@ -174,7 +174,7 @@ if "__main__" == __name__:
 
 	for s in range(maxSteps):
 
-		happinessMatrix, vacancyL, unHappyL = calcHappiness(aggregationMap, weightMatrix, likeMatrix, hThreshold)
+		happinessMatrix, vacancyL, unHappyL = CalcHappiness(aggregationMap, weightMatrix, likeMatrix, hThreshold)
 		avgHappiness = happinessMatrix.mean() / occupancyR
 		if len(unHappyL) == 0:
 			print("Everyone's happy! Step: {}".format(s))
@@ -192,8 +192,6 @@ if "__main__" == __name__:
 	ani = animation.ArtistAnimation(fig, ims, interval=100, blit=False, repeat=True)
 	# ani.save('aggregation_w{}_occRate{}_th{}.mp4'.format(width, occupancyR, round(hThreshold,2)))
 	plt.show()
-
-
 
 	# fig = plt.figure(figsize=(6,8))
 	# axMap = fig.add_subplot(2,1,1)
