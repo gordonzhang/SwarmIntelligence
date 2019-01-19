@@ -7,8 +7,8 @@ from matplotlib import colors
 
 
 ## Functions
-def initializeMatrix(nWidth, occupRate, gRatios):
-	assert (0 <= occupRate <= 1), ...
+def initializeMatrix(nWidth:int, occupancyRate:float, gRatios:list):
+	assert (0 <= occupancyRate <= 1), ...
 	"Occupancy Rate must be between 0 and 1."
 	assert (sum(gRatios) == 1), "Sum of weights must be 1."
 
@@ -16,12 +16,12 @@ def initializeMatrix(nWidth, occupRate, gRatios):
 	nNodes = nWidth ** 2
 	nodes = [0] * nNodes
 
-	startNode = (1 - occupRate) * nNodes
+	startNode = (1 - occupancyRate) * nNodes
 	startNode = int(round(startNode))
 
 	for i in range(nGroups):
 		idG = i + 1
-		nNodesThisGroup = gRatios[i] * nNodes * occupRate
+		nNodesThisGroup = gRatios[i] * nNodes * occupancyRate
 		nNodesThisGroup = int(round(nNodesThisGroup))
 		endNode = startNode + nNodesThisGroup
 
@@ -40,7 +40,7 @@ def initializeMatrix(nWidth, occupRate, gRatios):
 	return np.reshape(nodes, (nWidth, nWidth))
 
 
-def calcHappiness(aggMap, weightMat, likeMat, threshold):
+def calcHappiness(aggMap:np.array, weightMat:np.array, likeMat:np.array, threshold:float):
 	assert (np.size(weightMat,0)%2 == 1 and np.size(weightMat,1)%2 == 1), ...
 	"Number of rows and columns of weight matrix should be both odd numbers."
 
@@ -52,7 +52,7 @@ def calcHappiness(aggMap, weightMat, likeMat, threshold):
 	rVer = int(round(rVer))
 	rHor = int(round(rHor))
 	
-	happMat = np.zeros_like(aggMap, float)
+	happinessMat = np.zeros_like(aggMap, float)
 	vacancyList = []
 	unHappyList = []
 
@@ -84,17 +84,17 @@ def calcHappiness(aggMap, weightMat, likeMat, threshold):
 
 				# Maximum happiness is calculated with all 1's in local like map
 				# Happiness is the proportion of max happiness.
-				maxLocHappMap = np.ones_like(locMap, float) * wMt
-				maxHapp = maxLocHappMap.sum()
-				happScale = happVal / maxHapp
-				happMat[i,j] = happScale
-				if happScale < threshold:
+				maxLocHappinessMap = np.ones_like(locMap, float) * wMt
+				maxHappiness = maxLocHappinessMap.sum()
+				happinessScale = happVal / maxHappiness
+				happinessMat[i,j] = happinessScale
+				if happinessScale < threshold:
 					unHappyList.append([i,j])
 
-	return happMat, vacancyList, unHappyList
+	return happinessMat, vacancyList, unHappyList
 
 
-def move(aggMap, unHappyList, vacancyList, movingSize):
+def move(aggMap:np.array, unHappyList:list, vacancyList:list, movingSize:int):
 	moveOutList = []
 	moveInList = []
 	actualMoveSize = min(len(unHappyList), len(vacancyList), movingSize)
@@ -127,7 +127,6 @@ if "__main__" == __name__:
 							[0.0,0.5,1.0,0.5,0.0],
 							[0.0,0.0,0.5,0.0,0.0]])
 
-
 	# Like Matrix is the likeliness between groups
 	# LikeMat[2][3] is how much group 2 likes group 3
 	# First row and column is the empty space
@@ -135,33 +134,33 @@ if "__main__" == __name__:
 				[0.0, 0.7, 0.3],
 				[0.0, 0.3, 0.7]]
 
-	# likeMatrix = [[1,0,0],
-	# 		   [0,1,0],
-	# 		   [0,0,1]]
+	# likeMatrix=[[1,0,0],
+	# 			[0,1,0],
+	# 			[0,0,1]]
 
 	width = 100
-	occupancyRate = 0.9
+	occupancyR = 0.9
 	groupRatios = [.5,.5]
-	thres = 0.5
+	hThreshold = 0.5
 	moveSize = 100
 	maxSteps = 30
 
-	aggregationMap = initializeMatrix(width, occupancyRate, groupRatios)
+	aggregationMap = initializeMatrix(width, occupancyR, groupRatios)
 	print(aggregationMap)
 
 	# get the percentiles and set the threshold accordingly
-	happMatrix, vaccancyList, unHappyL = calcHappiness(aggregationMap, weightMatrix, likeMatrix, thres)
-	happList = happMatrix.reshape(-1)
-	index = np.argwhere(happList==0)
-	happList = np.delete(happList, index)
-	print("Minimum happiness: {}".format(np.amin(happList)))
+	happinessMatrix, vacancyL, unHappyL = calcHappiness(aggregationMap, weightMatrix, likeMatrix, hThreshold)
+	happinessList = happinessMatrix.reshape(-1)
+	index = np.argwhere(happinessList==0)
+	happinessList = np.delete(happinessList, index)
+	print("Minimum happiness: {}".format(np.amin(happinessList)))
 
-	percList = np.linspace(0, 100, num=11)
-	for p in percList:
-		val = np.percentile(happList, p)
+	percentileList = np.linspace(0, 100, num=11)
+	for p in percentileList:
+		val = np.percentile(happinessList, p)
 		print("{}% percentile: {}".format(p, val))
 
-	thres = np.percentile(happList, 20)
+	hThreshold = np.percentile(happinessList, 20)
 
 	#############################################################################################
 	# Plot
@@ -175,12 +174,12 @@ if "__main__" == __name__:
 
 	for s in range(maxSteps):
 
-		happMatrix, vaccancyList, unHappyL = calcHappiness(aggregationMap, weightMatrix, likeMatrix, thres)
-		avgHappiness = happMatrix.mean() / occupancyRate
+		happinessMatrix, vacancyL, unHappyL = calcHappiness(aggregationMap, weightMatrix, likeMatrix, hThreshold)
+		avgHappiness = happinessMatrix.mean() / occupancyR
 		if len(unHappyL) == 0:
 			print("Everyone's happy! Step: {}".format(s))
 			break
-		aggregationMap = move(aggregationMap, unHappyL, vaccancyList, moveSize)
+		aggregationMap = move(aggregationMap, unHappyL, vacancyL, moveSize)
 		print("step: {}".format(s))
 		# print(aggregationMap)
 		title1 = ax1.text(0.5,1.05,"Step: {}, Avg Happiness: {}".format(s, round(avgHappiness,3)),
@@ -191,7 +190,7 @@ if "__main__" == __name__:
 		ims.append([im1, title1])
 
 	ani = animation.ArtistAnimation(fig, ims, interval=100, blit=False, repeat=True)
-	# ani.save('aggregation_w{}_occRate{}_th{}.mp4'.format(width, occupancyRate, round(thres,2)))
+	# ani.save('aggregation_w{}_occRate{}_th{}.mp4'.format(width, occupancyR, round(hThreshold,2)))
 	plt.show()
 
 
@@ -202,9 +201,11 @@ if "__main__" == __name__:
 	# axCur = fig.add_subplot(2,2,4)
 	#
 	# ims = []
-	# cmap = matplotlib.colors.ListedColormap(['white', 'cyan', 'blue', 'green'])
+	# cmap = colors.ListedColormap(['white', 'cyan', 'blue', 'green'])
 	#
-	# def updateData(curr):
+	# def updateData(i):
+	# 	if i > maxSteps:
+	# 		break
 	# 	for ax in (ax1, ax2, ax3, ax4):
 	# 		ax.clear()
 	# 	ax1.hist(x1[:curr], normed=True, bins=np.linspace(-6,1, num=21), alpha=0.5)
